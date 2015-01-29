@@ -30,7 +30,6 @@ from matplotlib.backends.backend_gtkagg   import NavigationToolbar2GTKAgg as Nav
 #from matplotlib.backends.backend_gtkcairo import NavigationToolbar2GTKCairo as NavigationToolbar
 
 class PathPlayerGui:
-
   def __init__(self, client, publisher):
     self.gladefile = "@PATH_PLAYER_GLADE_FILENAME@"
     self.glade = gtk.Builder ()
@@ -111,15 +110,17 @@ class PathPlayerGui:
     rank = 0
     for n in self.client.robot.getJointNames ():
       cb = gtk.CheckButton (label = n)
-      self.yselectcb.append ((cb, rank))
+      size = self.client.robot.getJointConfigSize (n)
+      self.yselectcb.append ((cb, rank, size))
       w.pack_end (cb)
-      rank = rank + self.client.robot.getJointConfigSize (n)
+      rank = rank + size
 
   def fillComboBoxXSelect (self, w):
     rank = 0
     for n in self.client.robot.getJointNames ():
+      size = self.client.robot.getJointConfigSize (n)
       w.append ([n,rank])
-      rank = rank + self.client.robot.getJointConfigSize (n)
+      rank = rank + size
 
   def refreshPlot (self, w):
     pb = self.glade.get_object ("ProgressBarPlot")
@@ -135,7 +136,7 @@ class PathPlayerGui:
     for elt in self.yselectcb:
       cb = elt[0]
       if cb.get_active ():
-        ys.append ((cb.get_label (), elt[1]+1))
+        ys.append ((cb.get_label (), elt[1]+1, elt[2]))
     if len (ys) is 0:
       pb.set_text ("Wrong Y data")
       return
@@ -209,7 +210,11 @@ class _Matplotlib:
     self.figure.clf ()
     gca = pylab.gca ()
     for elt in self.ys:
+      if elt[2] == 1:
         pylab.plot (datas [:,self.x[1]], datas [:,elt[1]], label=elt[0])
+      else:
+        for i in xrange (elt[2]):
+          pylab.plot (datas [:,self.x[1]], datas [:,elt[1]+i], label="%s (%i)"%(elt[0],i))
     gca.set_xlabel (self.x[0])
     pylab.legend (loc='best')
     self.canvas.draw ()
