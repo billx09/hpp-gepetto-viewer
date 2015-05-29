@@ -104,7 +104,6 @@ class Viewer (object):
     # notes : the edges are always straight lines and doesn't represent the real path beetwen the configurations of the nodes
     def displayRoadmap (self,nameRoadmap,colorNode,radiusSphere,sizeAxis,colorEdge,joint=0):
       ps = self.problemSolver
-      problem = self.problemSolver.client.problem
       gui = self.client.gui
       robot = self.robot
       # find the link : 
@@ -150,7 +149,6 @@ class Viewer (object):
     def solveAndDisplay (self,nameRoadmap,numberIt,colorNode,radiusSphere,sizeAxis,colorEdge,joint = 0):
       import time
       ps = self.problemSolver
-      problem = self.problemSolver.client.problem
       gui = self.client.gui
       robot = self.robot
       # find the link : 
@@ -161,12 +159,12 @@ class Viewer (object):
       if ps.numberNodes() > 0 : 
         ps.clearRoadmap()
       tStart = time.time()
-      problem.prepareSolveStepByStep()
+      ps.prepareSolveStepByStep()
       beginEdge = ps.numberEdges()
       beginNode = ps.numberNodes()
       it = 1
       self.displayRoadmap(nameRoadmap,colorNode,radiusSphere,sizeAxis,colorEdge,joint)
-      while not problem.executeOneStep():
+      while not ps.executeOneStep():
         if it == numberIt :
           for i in range(beginNode,ps.numberNodes()) :	
             if joint == 0 :
@@ -189,7 +187,7 @@ class Viewer (object):
           it = 1
         else :
           it = it + 1
-      problem.finishSolveStepByStep()
+      ps.finishSolveStepByStep()
 			#display new edge (node ?) added by finish()
       for i in range(beginNode,ps.numberNodes()) :	
         if joint == 0 :
