@@ -255,6 +255,57 @@ class Viewer (object):
             self.client.gui.applyConfiguration (objectName, pos)
         self.client.gui.refresh ()
 
+    def robotNodeList (self):
+        bodies = []
+        for j, prefix, o in self.robotBodies:
+            bodies.append (prefix + o)
+        return bodies
+
+    def robotStaticBodiesPositions (self):
+        static_object = []
+        so_names = []
+        mobile_object = []
+        bl = list()
+        for j, prefix, o in self.robotBodies:
+            bl.append (prefix + o)
+            res, pos = self.client.gui.getStaticTransform (prefix + o)
+            if not res or cmp (pos, [0,0,0,1,0,0,0]) == 0:
+                mobile_object.append ([])
+            else:
+                mobile_object.append (pos)
+        for o in self.client.gui.getNodeList ():
+            res, pos = self.client.gui.getStaticTransform (o)
+            if o in bl:
+                continue
+            if res and cmp (pos, [0,0,0,1,0,0,0]) != 0:
+                static_object.append (pos)
+                so_names.append (o)
+        return mobile_object, static_object, so_names
+
+    def robotBodiesPositions (self, cfg):
+        self.robot.setCurrentConfig (cfg)
+        config = []
+        for j, prefix, o in self.robotBodies:
+            pos = self.robot.getLinkPosition (j)
+            #objectName = prefix + o
+            config.append (pos)
+        return config
+
+    def configListToFile (self, cfgs, fname):
+        data = dict ()
+        data["bodies"] = self.robotNodeList ()
+        static_transform = self.robotStaticBodiesPositions ()
+        data["static_transform"] = static_transform[0]
+        data["static_object_transform"] = static_transform[1]
+        data["static_object_names"] = static_transform[2]
+        poss = list ()
+        for c in cfgs:
+            poss.append (self.robotBodiesPositions (c))
+        data["configurations"] = poss
+        import json
+        with open (fname, "w") as f:
+            json.dump (data, f, indent=2)
+
     def __call__ (self, args):
         self.robotConfig = args
         self.publishRobots ()
