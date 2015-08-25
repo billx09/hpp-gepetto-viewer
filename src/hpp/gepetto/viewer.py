@@ -290,6 +290,9 @@ class Viewer (object):
             #objectName = prefix + o
             config.append (pos)
         return config
+    
+    def webInterfaceExportScene (self, fname):
+        self.client.gui.writeNodeFile (self.windowId, fname)
 
     def configListToFile (self, cfgs, fname):
         data = dict ()
