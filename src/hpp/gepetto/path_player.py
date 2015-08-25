@@ -49,6 +49,13 @@ class PathPlayer (object):
         pk.dump(tau,fh)
         fh.close()
 
+    def webInterfaceExport (self, pathId, fname, nbCfgs = 100):
+        cfgs = list ()
+        length = self.client.problem.pathLength (pathId)
+        for i in xrange (nbCfgs):
+            cfgs.append (self.client.problem.configAtParam (pathId, i * pathLength / nbCfgs))
+        self.publisher.configListToFile (cfgs, fname)
+
     def toFileAppend(self, pathId, fname):
         length = self.client.problem.pathLength (pathId)
         t = 0
