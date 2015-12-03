@@ -22,20 +22,32 @@ import pickle as pk
 ## displays a path by sampling configurations along the path.
 #
 class PathPlayer (object):
-    dt = 0.01
-    def __init__ (self, client, publisher) :
+    def __init__ (self, client, publisher, dt = 0.01, speed = 1) :
         self.client = client
         self.publisher = publisher
+        self.dt = dt
+        self.speed = speed
+
+    def setDt(self,dt):
+      self.dt = dt
+
+    def setSpeed(self,speed) :
+      self.speed = speed
 
     def __call__ (self, pathId) :
         length = self.client.problem.pathLength (pathId)
         t = 0
         while t < length :
+            start = time.time()
             q = self.client.problem.configAtParam (pathId, t)
             self.publisher.robotConfig = q
             self.publisher.publishRobots ()
-            t += self.dt
-            time.sleep (self.dt)
+            t += (self.dt * self.speed)
+            elapsed = time.time() - start
+            if elapsed < self.dt :
+              time.sleep(self.dt-elapsed)
+            else :
+              print("Warning : time step is shorter than computation time for robot geometry ("+str(elapsed)+")")
 
     def toFile(self, pathId, fname):
         length = self.client.problem.pathLength (pathId)
@@ -44,7 +56,7 @@ class PathPlayer (object):
         while t < length :
             q = self.client.problem.configAtParam (pathId, t)
             tau.append(q)
-            t += self.dt
+            t += (self.dt * self.speed)
         fh = open(fname,"wb")
         pk.dump(tau,fh)
         fh.close()
@@ -83,6 +95,11 @@ class PathPlayer (object):
         self.tau = self.getTrajFromFile(fname)
         for tauK in self.tau:
             for q in tauK:
+                start = time.time()
                 self.publisher.robotConfig = q
                 self.publisher.publishRobots ()
-                time.sleep (self.dt)
+                elapsed = time.time() - start
+                if elapsed < self.dt :
+                  time.sleep(self.dt-elapsed)
+                else :
+                  print("Warning : time step is shorter than computation time for robot geometry ("+str(elapsed)+")")

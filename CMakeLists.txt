@@ -30,8 +30,8 @@ set(PROJECT_URL "")
 findpython()
 setup_project()
 
-add_required_dependency(hpp-corbaserver >= 3)
-add_optional_dependency(gepetto-viewer-corba)
+add_required_dependency("hpp-corbaserver >= 3")
+add_optional_dependency("gepetto-viewer-corba")
 
 set (PATH_PLAYER_GLADE_FILENAME
     ${CMAKE_INSTALL_PREFIX}/${PYTHON_SITELIB}/hpp/gepetto/path_player_gui.glade
@@ -60,4 +60,9 @@ install(FILES
   DESTINATION ${PYTHON_SITELIB}/hpp/gepetto/manipulation
   )
 
+install(FILES
+  src/hpp/gepetto/blender/exportmotion.py
+  src/hpp/gepetto/blender/__init__.py
+  DESTINATION ${PYTHON_SITELIB}/hpp/gepetto/blender
+  )
 setup_project_finalize()

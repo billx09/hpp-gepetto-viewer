@@ -20,6 +20,7 @@
 import os.path
 import rospkg
 from gepetto.corbaserver import Client as GuiClient
+from gepetto import Error as GepettoError
 
 rospack = rospkg.RosPack()
 
@@ -72,12 +73,14 @@ class Viewer (object):
 
     def createWindowAndScene (self, viewerClient, name):
         self.windowName = "window_" + name
-        self.windowId = viewerClient.gui.createWindow (self.windowName)
+        try:
+            self.windowId = viewerClient.gui.getWindowID (self.windowName)
+        except GepettoError:
+            self.windowId = viewerClient.gui.createWindow (self.windowName)
         self.sceneName = "%i_scene_%s" % (self.windowId, name)
-        viewerClient.gui.createScene (self.sceneName)
-        if not viewerClient.gui.addSceneToWindow (self.sceneName,
-                                                  self.windowId):
-            raise RuntimeError ('Failed to add scene "%s" to window %i ("%s")'%
+        if viewerClient.gui.createGroup (self.sceneName):
+            if not viewerClient.gui.addSceneToWindow (self.sceneName, self.windowId):
+                raise RuntimeError ('Failed to add scene "%s" to window %i ("%s")'%
                                 (self.sceneName, self.windowId, self.windowName))
 
 
@@ -155,11 +158,14 @@ class Viewer (object):
       if joint == 0 :
         if robot.rootJointType == 'planar' :
           joint = robot.tf_root+'_joint'
-
       if ps.numberNodes() > 0 : 
         ps.clearRoadmap()
       tStart = time.time()
-      ps.prepareSolveStepByStep()
+      if ps.prepareSolveStepByStep() :
+        ps.finishSolveStepByStep()
+        self.displayRoadmap(nameRoadmap,colorNode,radiusSphere,sizeAxis,colorEdge,joint)
+        tStop = time.time()
+        return tStop-tStart
       beginEdge = ps.numberEdges()
       beginNode = ps.numberNodes()
       it = 1
@@ -230,9 +236,18 @@ class Viewer (object):
         meshPackagePath = rospack.get_path (meshPackageName)
         dataRootDir = os.path.dirname (meshPackagePath) + "/"
         packagePath += '/urdf/' + filename + '.urdf'
-        self.client.gui.addUrdfObjects (prefix, packagePath, meshPackagePath,
+        self.client.gui.addUrdfObjects (prefix, packagePath, dataRootDir,
                                         True)
         self.client.gui.addToGroup (prefix, self.sceneName)
+        self.computeObjectPosition ()
+
+    ## Move Obstacle
+    #
+    #  \param name Name of the object
+    #  \param position Position of the object as a 7-d vector
+    #         (translation-quaternion)
+    def moveObstacle (self, name, position):
+        self.problemSolver.moveObstacle ("box/base_link_0", position)
         self.computeObjectPosition ()
 
     ## Synchronize object positions in gepetto-viewer-server
