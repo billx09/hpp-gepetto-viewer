@@ -37,6 +37,10 @@ class ViewerFactory (object):
         self.problemSolver = problemSolver
         self.robot = problemSolver.robot
 
+    def loadRobot (self, path):
+        l = locals ();
+        self.guiRequest.append ((Viewer.loadRobot, l));
+
     def buildRobotBodies (self):
         l = locals ();
         self.guiRequest.append ((Viewer.buildRobotBodies, l));

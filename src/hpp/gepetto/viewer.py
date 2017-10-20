@@ -60,10 +60,14 @@ class Viewer (object):
             self.displayName = self.robot.displayName
         # Load robot in viewer
         self.buildRobotBodies ()
+        if all([hasattr(self.robot, attr) for attr in ["packageName", "urdfName", "urdfSuffix"]]):
+            path = "package://" + self.robot.packageName + '/urdf/' + self.robot.urdfName + self.robot.urdfSuffix + '.urdf'
+            self.loadRobot (path)
+
+    def loadRobot (self, path):
         dataRootDir = "" # Ignored for now. Will soon disappear
-        path = "package://" + self.robot.packageName + '/urdf/' + self.robot.urdfName + self.robot.urdfSuffix + '.urdf'
         self.client.gui.addURDF (self.displayName, path, dataRootDir)
-        if collisionURDF:
+        if self.collisionURDF:
             self.toggleVisual(False)
         self.client.gui.addToGroup (self.displayName, self.sceneName)
 
@@ -269,7 +273,10 @@ class Viewer (object):
         if not guiOnly:
             self.problemSolver.loadObstacleFromUrdf (package, filename, prefix+'/')
         dataRootDir = "" # Ignored for now. Will soon disappear
-        path = "package://" + package + '/urdf/' + filename + '.urdf'
+        if package == "":
+            path = filename
+        else:
+            path = "package://" + package + '/urdf/' + filename + '.urdf'
         self.client.gui.addUrdfObjects (prefix, path, dataRootDir,
                                         not self.collisionURDF)
         self.client.gui.addToGroup (prefix, self.sceneName)

@@ -23,8 +23,8 @@ from hpp.gepetto import Viewer as Parent
 ## Simultaneous control to hpp-manipulation-server and gepetto-viewer-server.
 #
 class Viewer (Parent):
-    def __init__ (self, problemSolver, viewerClient = None, collisionURDF = False) :
-        Parent.__init__ (self, problemSolver, viewerClient, collisionURDF)
+    def __init__ (self, problemSolver, viewerClient = None, collisionURDF = False, displayName = None) :
+        Parent.__init__ (self, problemSolver, viewerClient, collisionURDF, displayName)
         self.compositeRobotName = self.robot.client.basic.robot.getRobotName()
         if not self.client.gui.nodeExists(self.compositeRobotName):
             self.client.gui.createGroup (self.compositeRobotName)
@@ -81,7 +81,12 @@ class Viewer (Parent):
     def loadUrdfInGUI (self, RobotType, robotName):
         # Load robot in viewer
         dataRootDir = "" # Ignored for now. Will soon disappear
-        path = "package://" + RobotType.packageName + '/urdf/' + RobotType.urdfName + RobotType.urdfSuffix + '.urdf'
+        if isinstance(RobotType, str):
+            path = RobotType
+        elif all([hasattr(RobotType, attr) for attr in ["packageName", "urdfName", "urdfSuffix"]]):
+            path = "package://" + RobotType.packageName + '/urdf/' + RobotType.urdfName + RobotType.urdfSuffix + '.urdf'
+        else:
+            raise TypeError("RobotType must be an object or a string")
         if self.collisionURDF:
             self.client.gui.addUrdfCollision (robotName, path, dataRootDir)
         else:
@@ -90,7 +95,12 @@ class Viewer (Parent):
 
     def loadUrdfObjectsInGUI (self, RobotType, robotName):
         dataRootDir = "" # Ignored for now. Will soon disappear
-        path = "package://" + RobotType.packageName + '/urdf/' + RobotType.urdfName + RobotType.urdfSuffix + '.urdf'
+        if isinstance(RobotType, str):
+            path = RobotType
+        elif all([hasattr(RobotType, attr) for attr in ["packageName", "urdfName", "urdfSuffix"]]):
+            path = "package://" + RobotType.packageName + '/urdf/' + RobotType.urdfName + RobotType.urdfSuffix + '.urdf'
+        else:
+            raise TypeError("RobotType must be an object or a string")
         self.client.gui.addUrdfObjects (robotName, path, dataRootDir,
                                         not self.collisionURDF)
         self.client.gui.addToGroup (robotName, self.sceneName)
